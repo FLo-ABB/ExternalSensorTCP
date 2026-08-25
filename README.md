@@ -267,6 +267,15 @@ Typical shutdown log sequence:
 
 ---
 
+## Examples
+
+Example configurations and integration guides for common sensor types:
+
+- **`example/cognex/`** — Cognex job file
+- **`example/keyence/`** — Keyence programs (calibration and ShapeTrax3A)
+
+---
+
 ## Extending
 
 This implementation follows the ABB External Sensor interface contract defined in `ExternalSensorInterface.py`. To create a different sensor type:
