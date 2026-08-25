@@ -169,6 +169,12 @@ Example payload sent by the camera (one acquisition, two objects):
 123,2,100.0,200.0,0.0,0,1.0,0.0,0.0,0.0,0.0,0.0,2,150.0,250.0,90.0,1,1.0,0.0,0.0,0.0,0.0,0.0,2\r\n
 ```
 
+### Critical Requirements
+
+> **Frame/acquisition trigger:** Must be sent immediately when the camera is triggered. Delays will cause position matching errors in PickMaster.
+>
+> **Position message:** Must always be sent for every frame, even when no objects are found. Send `AcqNo,0` (zero objects) if needed. If omitted, PickMaster will emit warnings that positions are missing.
+
 Runtime behavior:
 
 - The parser is line-based (`CRLF`/`LF`) and supports TCP chunk fragmentation.
