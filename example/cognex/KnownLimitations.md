@@ -1,3 +1,0 @@
-# Known Limitations
-
-String length is limited in the Cognex spreadsheet. As a result, the Cognex example job supports a maximum of five locations in a single location message. To send more than five locations, split them across multiple messages and update the Python code to handle the additional messages. The current example job does not support more than five locations per message because of these spreadsheet limitations.
