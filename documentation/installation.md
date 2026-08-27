@@ -11,7 +11,7 @@
 Copy the runtime script and its companion Python files from the repository's `scripts/` folder into the PickMaster script folder:
 
 ```text
-C:\Users\<username>\Documents\PickMaster\PMScripts
+%PROGRAMDATA%\ABB\PickMaster\PMScripts\
 ```
 
 At minimum, copy these files together:
