@@ -46,6 +46,25 @@ This prevents a single run from creating a continuously growing log file that ca
 - malformed text or invalid object block
 - shutdown and socket close
 
+## Events reference
+
+| Event                                           | Level   |
+| ------------------------------------------------| --------|
+| Sensor thread starting                          | SUCCESS |
+| TCP connection established                      | SUCCESS |
+| Positions sent to PMTW                          | SUCCESS |
+| Strobe time stored for AcqNo trigger            | SUCCESS |
+| TCP connection failed                           | ERROR   |
+| Socket disconnected                             | ERROR   |
+| Socket receive error                            | ERROR   |
+| Text parse error (message discarded)            | ERROR   |
+| AcqNo not in strobe buffer (position discarded) | ERROR   |
+| Invalid NumberOfObjects / malformed payload     | ERROR   |
+| Runtime thread exception                        | ERROR   |
+| Recipe lifecycle and shutdown steps             | SUCCESS |
+
+See [Architecture](architecture.md) for the graceful shutdown log sequence.
+
 ## Warning behavior
 
 If the log file reaches the 50 MB limit, the current active file is renamed and a new one is created. The warning is emitted only once per runtime to avoid excessive noise in repetitive rollover cases.

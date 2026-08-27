@@ -3,24 +3,28 @@
 ## Requirements
 
 - PickMaster Twin/Lite with External Sensor support
-- Python 3.10+
+- A PickMaster installation with Python 3.12 support
 - Access to the PM scripts directory under `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`
 
 ## Deployment
 
-Copy the project files into the PM scripts folder used by your installation, typically:
+Copy the runtime script and its companion Python files into the PickMaster script folder:
 
 ```text
-%PROGRAMDATA%\ABB\PickMaster\PMScripts\
+C:\Users\<username>\Documents\PickMaster\PMScripts
 ```
 
-The project expects these files to be present:
+At minimum, copy these files together:
 
 - `ExternalSensorTCP.py`
-- `SensorFunctions.py`
-- `SensorUI.py`
-- `SensorLogger.py`
 - `ExternalSensorInterface.py`
+- `SensorFunctions.py`
+- `SensorLogger.py`
+- `SensorUI.py`
+
+In PickMaster, add an **External Sensor**, open **Configuration**, and enter `ExternalSensorTCP.py` as the script name. The name must match the Python file in the `PMScripts` directory. The script is loaded by PickMaster Runtime through the External Sensor interface, so the External Sensor must be configured before creating its associated Position Generator.
+
+Python scripts are not included in Pack&Go archives. Copy the files manually when transferring a solution to another PC. For details about External Sensor configuration, Python interfaces, and deployment requirements, see Chapter 5.2, **External sensor**, in *Application manual - PickMaster® Twin - PowerPac*, or the corresponding **External Sensor** chapter in *Application manual - PickMaster® Lite*.
 
 ## Verification
 

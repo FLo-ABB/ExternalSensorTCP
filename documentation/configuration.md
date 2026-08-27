@@ -1,5 +1,20 @@
 # Configuration
 
+## Sensor configuration dialog
+
+Opened by PMTW when the user clicks **Configure** on the External Sensor item.
+
+| Field           | Description                                                          |
+| --------------- | ---------------------------------------------------------------------|
+| TCP server IP   | IPv4 address of the sensor's TCP server                              |
+| TCP server port | Port number (0–65535)                                                |
+| Test button     | Opens a 1.5 s test connection; **OK is disabled until test passes**  |
+| Enable logging  | Checkbox to activate file logging; unchecked by default              |
+| Log folder      | Destination folder (created automatically if missing)               |
+| File name       | Log filename; default: `ExternalSensor.log`                          |
+
+The sensor config persists in the base class dictionary. The logger config persists in `C:\PMScriptsConfig\ExternalSensorTCP.config.json` and is reloaded by sensor ID.
+
 ## Sensor configuration
 
 The sensor configuration dialog is used to set:
@@ -43,6 +58,14 @@ Example:
 ```text
 "0|C:\PMScriptsLog|ExternalSensor.log"
 ```
+
+## Position generator configuration dialog
+
+Opened when the user clicks **Configure** on the Item Source item.
+
+| Field                    | Description                                            |
+| ------------------------ | -------------------------------------------------------|
+| Position generator index | One or more integer indices (0–1000), separated by `;` |
 
 ## Position generator configuration
 

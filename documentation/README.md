@@ -10,8 +10,10 @@ This folder contains the user-facing documentation for the TCP-based External Se
 
 - [Installation](installation.md) — required setup and deployment steps
 - [Configuration](configuration.md) — sensor, logger, and position-generator setup
+- [Protocol](protocol.md) — TCP text message format and position payload sent to PMTW
+- [Architecture](architecture.md) — project structure, runtime flow, shutdown behavior, extending
 - [Logging](logging.md) — default log behavior, rotation, and sample output
-- [Troubleshooting](troubleshooting.md) — common issues and fixes
+- [Troubleshooting](troubleshooting.md) — common issues, fixes, and error reference
 
 ## Main runtime flow
 
@@ -27,6 +29,8 @@ PMTW
                  ├─ match AcqNo to strobe time
                  └─ call callback.NewPosition(objects)
 ```
+
+See [Architecture](architecture.md) for full details.
 
 ## Files in this project
 

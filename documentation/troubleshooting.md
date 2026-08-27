@@ -62,3 +62,12 @@ This behavior is intentional: the sensor runtime continues to operate even if th
 - test the TCP connection before starting the recipe
 - inspect `AcqNo` mismatches and malformed payload warnings
 - review the latest rotated files before deleting old logs
+
+## Error reference
+
+| Error code          | Meaning                                                                 |
+| -------------------- | -------------------------------------------------------------------------|
+| `PortOccupiedError` | Windows socket error 10048 — another process is already using the port |
+| WinError 10040      | TCP receive failed because the message payload was too large           |
+| WinError 10061      | Connection refused — sensor server is not running or wrong IP/port     |
+
