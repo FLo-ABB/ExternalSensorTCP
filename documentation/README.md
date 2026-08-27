@@ -34,11 +34,11 @@ See [Architecture](architecture.md) for full details.
 
 ## Files in this project
 
-- `ExternalSensorTCP.py` — main runtime class and lifecycle logic
-- `SensorFunctions.py` — TCP receive loop and position parsing
-- `SensorUI.py` — configuration dialogs
-- `SensorLogger.py` — bounded file logger and rotation logic
-- `ExternalSensorInterface.py` — ABB interface contract
+- `scripts/ExternalSensorTCP.py` — main runtime class and lifecycle logic
+- `scripts/SensorFunctions.py` — TCP receive loop and position parsing
+- `scripts/SensorUI.py` — configuration dialogs
+- `scripts/SensorLogger.py` — bounded file logger and rotation logic
+- `scripts/ExternalSensorInterface.py` — ABB interface contract
 
 ## Default behavior
 

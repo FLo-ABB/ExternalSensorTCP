@@ -8,7 +8,7 @@
 
 ## Deployment
 
-Copy the runtime script and its companion Python files into the PickMaster script folder:
+Copy the runtime script and its companion Python files from the repository's `scripts/` folder into the PickMaster script folder:
 
 ```text
 C:\Users\<username>\Documents\PickMaster\PMScripts
@@ -16,11 +16,11 @@ C:\Users\<username>\Documents\PickMaster\PMScripts
 
 At minimum, copy these files together:
 
-- `ExternalSensorTCP.py`
-- `ExternalSensorInterface.py`
-- `SensorFunctions.py`
-- `SensorLogger.py`
-- `SensorUI.py`
+- `scripts/ExternalSensorTCP.py`
+- `scripts/ExternalSensorInterface.py`
+- `scripts/SensorFunctions.py`
+- `scripts/SensorLogger.py`
+- `scripts/SensorUI.py`
 
 In PickMaster, add an **External Sensor**, open **Configuration**, and enter `ExternalSensorTCP.py` as the script name. The name must match the Python file in the `PMScripts` directory. The script is loaded by PickMaster Runtime through the External Sensor interface, so the External Sensor must be configured before creating its associated Position Generator.
 

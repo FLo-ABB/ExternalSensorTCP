@@ -2,13 +2,13 @@
 
 ## Project structure
 
-| File                         | Role                                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------------|
-| `ExternalSensorTCP.py`       | Main runtime — orchestrates configuration, thread lifecycle, and sensor startup  |
-| `SensorFunctions.py`         | TCP client loop — connects, receives text lines, parses positions, sends to PMTW |
-| `SensorUI.py`                | Tkinter dialogs for sensor and position-generator configuration                  |
-| `SensorLogger.py`            | File logger with default off state and bounded rotation                          |
-| `ExternalSensorInterface.py` | ABB-provided interface contract — do not modify                                  |
+| File                              | Role                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------|
+| `scripts/ExternalSensorTCP.py`    | Main runtime — orchestrates configuration, thread lifecycle, and sensor startup  |
+| `scripts/SensorFunctions.py`      | TCP client loop — connects, receives text lines, parses positions, sends to PMTW |
+| `scripts/SensorUI.py`             | Tkinter dialogs for sensor and position-generator configuration                  |
+| `scripts/SensorLogger.py`         | File logger with default off state and bounded rotation                          |
+| `scripts/ExternalSensorInterface.py` | ABB-provided interface contract — do not modify                               |
 
 ## Runtime flow
 
@@ -45,9 +45,9 @@ Typical shutdown log sequence:
 
 ## Extending
 
-This implementation follows the ABB External Sensor interface contract defined in `ExternalSensorInterface.py`. To create a different sensor type:
+This implementation follows the ABB External Sensor interface contract defined in `scripts/ExternalSensorInterface.py`. To create a different sensor type:
 
-1. Copy `ExternalSensorTCP.py` and rename it (class name must match file name).
+1. Copy `scripts/ExternalSensorTCP.py` and rename it (class name must match file name).
 2. Inherit the four base classes: `SensorRuntime, PositionGenerator, SensorConfig, SensorInfo`.
 3. Implement `configureSensor(sensorId)`, `configurePosGen(posGenId)`, `startSensor(callBackFunc)`, and `stopSensor()`.
-4. Follow the Step 1–5 pattern in `startSensor` (documented in `ExternalSensorInterface.py`).
+4. Follow the Step 1–5 pattern in `startSensor` (documented in `scripts/ExternalSensorInterface.py`).

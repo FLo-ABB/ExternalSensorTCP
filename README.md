@@ -19,7 +19,7 @@ A lightweight Python integration for the PickMaster Twin/Lite External Sensor in
 
 ## Quick start
 
-1. Copy `ExternalSensorTCP.py`, `ExternalSensorInterface.py`, `SensorFunctions.py`, `SensorLogger.py`, and `SensorUI.py` into the PickMaster scripts folder `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`.
+1. Copy `scripts\ExternalSensorTCP.py`, `scripts\ExternalSensorInterface.py`, `scripts\SensorFunctions.py`, `scripts\SensorLogger.py`, and `scripts\SensorUI.py` into the PickMaster scripts folder `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`.
 2. In PickMaster, add an **External Sensor** and enter `ExternalSensorTCP.py` as the script name.
 3. Configure the sensor's TCP IP/port and (optionally) logging.
 
