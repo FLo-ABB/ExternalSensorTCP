@@ -5,6 +5,14 @@
 """Tests for SensorFunctions.startSensor using the mock external sensor
 (unreliable, can send incorrect data) and the mock PickMaster (reliable)."""
 
+# Coverage:
+# - Correct X,Y,RZ and metadata parsing and forwarding to PickMaster.
+# - Zero-object acquisitions still produce an empty position response.
+# - Incorrect acquisition data is rejected, logged, and does not stop the worker.
+# - Incorrect position field counts are rejected without forwarding a position.
+# - Positions received before their acquisition trigger are discarded.
+# - Client disconnects stop the worker cleanly and report the socket error.
+
 import threading
 import time
 
@@ -39,7 +47,9 @@ def _start_sensor_thread(sensor, pickmaster, sensor_config_info, sensor_id="sens
     return thread
 
 
-def test_valid_acquisition_and_position_are_forwarded_to_pickmaster(mock_sensor_server, mock_pickmaster):
+# Verifies one correctly formatted X,Y,RZ and metadata object is forwarded to
+# PickMaster with the expected sensor, position-generator, and strobe values.
+def test_single_position_is_forwarded_to_pickmaster(mock_sensor_server, mock_pickmaster):
     sensor = SensorFunctions.SensorFunctions()
     sensor.isRunning = True
     sensorConfigInfo = "{};{}".format(mock_sensor_server.host, mock_sensor_server.port)
@@ -75,6 +85,52 @@ def test_valid_acquisition_and_position_are_forwarded_to_pickmaster(mock_sensor_
         thread.join(timeout=2)
 
 
+# Verifies multiple correctly formatted position objects from one acquisition
+# are all forwarded to PickMaster with sequential object keys.
+def test_multiple_positions_are_forwarded_to_pickmaster(mock_sensor_server, mock_pickmaster):
+    sensor = SensorFunctions.SensorFunctions()
+    sensor.isRunning = True
+    sensorConfigInfo = "{};{}".format(mock_sensor_server.host, mock_sensor_server.port)
+
+    thread = _start_sensor_thread(sensor, mock_pickmaster, sensorConfigInfo)
+    try:
+        assert mock_sensor_server.wait_for_client()
+
+        mock_sensor_server.send_acquisition_trigger(5)
+        mock_sensor_server.send_position_line(
+            5,
+            [
+                {
+                    "X": 100.0, "Y": 200.0, "RZ": 10.0, "Tag": 1, "Score": 0.95,
+                    "Val1": 1.0, "Val2": 2.0, "Val3": 3.0, "Val4": 4.0, "Val5": 5.0, "Level": 2,
+                },
+                {
+                    "X": 300.0, "Y": 400.0, "RZ": 20.0, "Tag": 2, "Score": 0.85,
+                    "Val1": 6.0, "Val2": 7.0, "Val3": 8.0, "Val4": 9.0, "Val5": 10.0, "Level": 1,
+                },
+            ],
+        )
+
+        assert mock_pickmaster.wait_for_position_count(1)
+        position = mock_pickmaster.positions[0]
+        assert position["'0'"]["X"] == 100.0
+        assert position["'0'"]["RZ"] == 10.0
+        assert position["'0'"]["Tag"] == 1
+        assert position["'0'"]["Val5"] == 5.0
+        assert position["'1'"]["X"] == 300.0
+        assert position["'1'"]["RZ"] == 20.0
+        assert position["'1'"]["Tag"] == 2
+        assert position["'1'"]["Val5"] == 10.0
+        assert position["'1'"]["Level"] == 1
+    finally:
+        sensor.isRunning = False
+        if sensor.server is not None:
+            sensor.server.close()
+        thread.join(timeout=2)
+
+
+# Verifies an acquisition declaring zero objects still sends one empty position
+# response so PickMaster receives an answer for every acquisition.
 def test_zero_objects_still_sends_position_with_no_objects(mock_sensor_server, mock_pickmaster):
     sensor = SensorFunctions.SensorFunctions()
     sensor.isRunning = True
@@ -98,6 +154,8 @@ def test_zero_objects_still_sends_position_with_no_objects(mock_sensor_server, m
         thread.join(timeout=2)
 
 
+# Verifies malformed acquisition data is logged and discarded, while the
+# worker remains available to process a subsequent valid acquisition.
 def test_incorrect_data_format_is_discarded_and_logged(mock_sensor_server, mock_pickmaster):
     # The external sensor can send garbage / incorrect data; ExternalSensorTCP
     # must not crash and must log the problem while continuing to operate.
@@ -128,6 +186,8 @@ def test_incorrect_data_format_is_discarded_and_logged(mock_sensor_server, mock_
         thread.join(timeout=2)
 
 
+# Verifies a position line with an incomplete X,Y,RZ/object field block is
+# rejected and no malformed position is forwarded to PickMaster.
 def test_incorrect_field_count_position_line_is_rejected(mock_sensor_server, mock_pickmaster):
     sensor = SensorFunctions.SensorFunctions()
     sensor.isRunning = True
@@ -152,6 +212,8 @@ def test_incorrect_field_count_position_line_is_rejected(mock_sensor_server, moc
         thread.join(timeout=2)
 
 
+# Verifies a position arriving before its matching acquisition trigger is
+# discarded because no strobe time is available for that acquisition number.
 def test_position_before_trigger_is_discarded(mock_sensor_server, mock_pickmaster):
     sensor = SensorFunctions.SensorFunctions()
     sensor.isRunning = True
@@ -179,6 +241,8 @@ def test_position_before_trigger_is_discarded(mock_sensor_server, mock_pickmaste
         thread.join(timeout=2)
 
 
+# Verifies a disconnected sensor socket terminates the worker cleanly and
+# reports the disconnect through the PickMaster log callback.
 def test_client_disconnect_stops_worker_cleanly(mock_sensor_server, mock_pickmaster):
     sensor = SensorFunctions.SensorFunctions()
     sensor.isRunning = True
