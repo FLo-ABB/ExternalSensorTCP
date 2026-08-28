@@ -3,7 +3,6 @@
 A lightweight Python integration for the PickMaster Twin/Lite External Sensor interface. It connects to a TCP-based position sensor, parses acquisition and object data from the incoming text stream, and forwards valid positions to PMTW for robot pick-and-place coordination.
 
 **Author:** F. LOBERT, ABB  
-**Version:** 1.0  
 **Status:** Working  
 **License:** MIT
 
@@ -42,6 +41,17 @@ Example configurations and integration guides for common sensor types:
 - **`example/cognex/`** — Cognex job file
 - **`example/keyence/`** — Keyence programs (calibration and ShapeTrax3A)
 
+## Releases
+
+Packaged releases are published from GitHub. Each release contains a ZIP archive of the `scripts/` folder named `ExternalSensorTCP-X.Y.zip`, together with a Markdown release note `ExternalSensorTCP-X.Y-release-notes.md` built from [`CHANGELOG.md`](CHANGELOG.md).
+
+The version number is **not** entered by hand: it is read from the `version` attribute of the `ExternalSensorTCP` class in [`scripts/ExternalSensorTCP.py`](scripts/ExternalSensorTCP.py) — the same value that PickMaster shows as Sensor Information.
+
+- `X` (major): new functions / features
+- `Y` (minor): bug fixes
+
+To publish: in a pull request, bump `version` in `scripts/ExternalSensorTCP.py` and add the matching `## X.Y` section to `CHANGELOG.md`. After merging, run the **Release** workflow from the *Actions* tab (`Run workflow`). It lints, runs the tests, builds the archive and the release note, then creates the `vX.Y` tag and GitHub release. The run fails if the tag already exists or if the changelog section is missing.
+
 ## Contributing
 
 We welcome improvements, bug reports, and feature requests.
@@ -50,6 +60,8 @@ We welcome improvements, bug reports, and feature requests.
 2. Create a dedicated branch for your fix or feature
 3. Keep changes focused and update the documentation when behavior changes.
 4. Open a pull request with a short summary, motivation, and validation notes.
+
+Direct pushes to `main` are not allowed. Every change must go through a pull request whose CI checks (lint, tests, version format) pass before merging.
 
 > Please do not open a pull request without a related issue or a clear change description.
 
