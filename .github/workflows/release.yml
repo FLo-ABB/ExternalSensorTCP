@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Optional extra release notes (the version comes from scripts/ExternalSensorTCP.py)'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Mark the release as a pre-release'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pytest flake8
+
+      - name: Lint
+        run: python -m flake8 scripts tests .github/scripts --max-line-length=160
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Read version from source
+        id: version
+        shell: bash
+        run: python .github/scripts/get_version.py
+
+      - name: Fail if tag already exists
+        shell: bash
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists. Bump 'version' in scripts/ExternalSensorTCP.py before releasing."
+            exit 1
+          fi
+
+      - name: Create scripts archive
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p dist
+          (cd scripts && 7z a -tzip "../dist/ExternalSensorTCP-${version}.zip" .)
+
+      - name: Upload archive as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExternalSensorTCP-${{ steps.version.outputs.version }}
+          path: dist/ExternalSensorTCP-${{ steps.version.outputs.version }}.zip
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ExternalSensorTCP v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          body: |
+            Version **${{ steps.version.outputs.version }}** as declared in `scripts/ExternalSensorTCP.py` (Sensor Information).
+
+            The attached archive contains the content of the `scripts/` folder, ready to be copied into
+            `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`.
+
+            ${{ inputs.release_notes }}
+          files: dist/ExternalSensorTCP-${{ steps.version.outputs.version }}.zip
