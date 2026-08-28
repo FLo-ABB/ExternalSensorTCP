@@ -16,6 +16,14 @@ Add a `## X.Y` section here in the same pull request that bumps the version. The
 Release workflow extracts that section into the release notes shipped next to the
 ZIP archive.
 
+## 1.1
+
+### Changed
+
+- Log rotation no longer writes warning messages to the error output.
+- Release packages now include the MIT license and a link to the source
+  repository.
+
 ## 1.0
 
 ### Added

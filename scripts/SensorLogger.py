@@ -1,7 +1,3 @@
-# This software is provided 'as-is', without any express or
-# implied warranty. In no event will ABB be held liable for
-# any damages arising from the use of this software.
-
 import ctypes
 import ctypes.wintypes
 import datetime
@@ -71,7 +67,6 @@ class SensorLogger:
     _write_queue: queue.Queue = queue.Queue()
     _worker_started = False
     _worker_lock = threading.Lock()
-    _rotation_warning_emitted = False
 
     def __init__(self, config_str: str = "") -> None:
         self.enabled, self.folder, self.filename = deserialize_config(config_str)
@@ -79,16 +74,6 @@ class SensorLogger:
     @property
     def log_path(self) -> str:
         return os.path.join(self.folder, self.filename)
-
-    @classmethod
-    def _warn_rotation_limit(cls) -> None:
-        if cls._rotation_warning_emitted:
-            return
-        print(
-            "[SensorLogger] Log file reached 50 MB and was rotated. Keeping the latest 5 files.",
-            file=sys.stderr,
-        )
-        cls._rotation_warning_emitted = True
 
     @classmethod
     def _rotate_log_file(cls, log_path: str) -> None:
@@ -102,7 +87,6 @@ class SensorLogger:
             extension,
         )
         os.replace(log_path, rotated_name)
-        cls._warn_rotation_limit()
 
         rotated_files = sorted(
             glob.glob("{}_*{}".format(base_name, extension)),

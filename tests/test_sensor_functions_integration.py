@@ -1,7 +1,3 @@
-# This software is provided 'as-is', without any express or
-# implied warranty. In no event will ABB be held liable for
-# any damages arising from the use of this software.
-
 """Tests for SensorFunctions.startSensor using the mock external sensor
 (unreliable, can send incorrect data) and the mock PickMaster (reliable)."""
 

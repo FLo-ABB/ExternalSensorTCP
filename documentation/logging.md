@@ -21,7 +21,6 @@ To prevent uncontrolled log growth, the logger uses a bounded rotation policy:
 - maximum active file size: 50 MB
 - rotate when file reaches the limit
 - keep only the latest 5 rotated files
-- print a single warning to `stderr` when rollover happens
 
 This prevents a single run from creating a continuously growing log file that can consume a large amount of disk space.
 
@@ -65,6 +64,6 @@ This prevents a single run from creating a continuously growing log file that ca
 
 See [Architecture](architecture.md) for the graceful shutdown log sequence.
 
-## Warning behavior
+## Rotation behavior
 
-If the log file reaches the 50 MB limit, the current active file is renamed and a new one is created. The warning is emitted only once per runtime to avoid excessive noise in repetitive rollover cases.
+If the log file reaches the 50 MB limit, the current active file is renamed and a new one is created.

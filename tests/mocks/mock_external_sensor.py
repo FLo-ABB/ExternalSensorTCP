@@ -1,7 +1,3 @@
-# This software is provided 'as-is', without any express or
-# implied warranty. In no event will ABB be held liable for
-# any damages arising from the use of this software.
-
 """Mock TCP server that stands in for a real external sensor.
 
 It can be driven to send well-formed protocol lines (acquisition trigger and
