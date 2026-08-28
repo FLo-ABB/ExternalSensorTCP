@@ -1,7 +1,3 @@
-# This software is provided 'as-is', without any express or
-# implied warranty. In no event will ABB be held liable for
-# any damages arising from the use of this software.
-
 # ExternalSensorTCP
 from ExternalSensorInterface import StoppableThread
 from ExternalSensorInterface import SensorInfo
@@ -29,7 +25,7 @@ class ExternalSensorTCP(SensorRuntime, PositionGenerator, SensorConfig, SensorIn
     )
 
     author = "F. LOBERT, ABB"
-    version = "1.0"
+    version = "1.1"
 
     allThreads = []
     allSensors = []

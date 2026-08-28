@@ -52,7 +52,11 @@ jobs:
           version="${{ steps.version.outputs.version }}"
           mkdir -p dist
           find scripts -name '__pycache__' -type d -prune -exec rm -rf {} +
-          (cd scripts && 7z a -tzip "../dist/ExternalSensorTCP-${version}.zip" .)
+          mkdir -p dist/package
+          cp -r scripts/. dist/package/
+          cp LICENSE dist/package/LICENSE
+          (cd dist/package && 7z a -tzip "../ExternalSensorTCP-${version}.zip" .)
+          rm -rf dist/package
 
       - name: Build release notes
         shell: bash
