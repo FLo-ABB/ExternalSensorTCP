@@ -43,14 +43,14 @@ Example configurations and integration guides for common sensor types:
 
 ## Releases
 
-Packaged releases are published from GitHub. Each release contains a ZIP archive of the `scripts/` folder named `ExternalSensorTCP-X.Y.zip`.
+Packaged releases are published from GitHub. Each release contains a ZIP archive of the `scripts/` folder named `ExternalSensorTCP-X.Y.zip`, together with a Markdown release note `ExternalSensorTCP-X.Y-release-notes.md` built from [`CHANGELOG.md`](CHANGELOG.md).
 
 The version number is **not** entered by hand: it is read from the `version` attribute of the `ExternalSensorTCP` class in [`scripts/ExternalSensorTCP.py`](scripts/ExternalSensorTCP.py) — the same value that PickMaster shows as Sensor Information.
 
 - `X` (major): new functions / features
 - `Y` (minor): bug fixes
 
-To publish: bump `version` in `scripts/ExternalSensorTCP.py` through a pull request, then run the **Release** workflow from the *Actions* tab (`Run workflow`). It lints, runs the tests, builds the archive and creates the `vX.Y` tag and GitHub release. The run fails if the tag already exists, so the version must be bumped before each release.
+To publish: in a pull request, bump `version` in `scripts/ExternalSensorTCP.py` and add the matching `## X.Y` section to `CHANGELOG.md`. After merging, run the **Release** workflow from the *Actions* tab (`Run workflow`). It lints, runs the tests, builds the archive and the release note, then creates the `vX.Y` tag and GitHub release. The run fails if the tag already exists or if the changelog section is missing.
 
 ## Contributing
 

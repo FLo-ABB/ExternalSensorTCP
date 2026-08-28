@@ -42,4 +42,8 @@ jobs:
           python-version: '3.11'
 
       - name: Validate declared version
+        id: version
         run: python .github/scripts/get_version.py
+
+      - name: Validate changelog entry
+        run: python .github/scripts/build_release_notes.py "${{ steps.version.outputs.version }}" "$RUNNER_TEMP/release-notes.md"
