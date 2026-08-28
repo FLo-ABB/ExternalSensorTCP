@@ -8,6 +8,10 @@ The version number is the `version` attribute of the `ExternalSensorTCP` class i
 - `X` (major): new functions / features
 - `Y` (minor): bug fixes
 
+Only changes that affect the script package shipped in the release ZIP should
+bump this version. Documentation-only, CI-only, and repository metadata changes
+do not require a new version.
+
 Add a `## X.Y` section here in the same pull request that bumps the version. The
 Release workflow extracts that section into the release notes shipped next to the
 ZIP archive.
