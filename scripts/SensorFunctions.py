@@ -1,5 +1,4 @@
 import socket
-import re
 from typing import Any
 from collections import OrderedDict
 import SensorLogger
