@@ -106,3 +106,27 @@ When no part is detected, the position objects are omitted:
     'Time':     strobeTime,
 }
 ```
+
+## Known limitation: 2D-only positions
+
+This implementation only handles 2D sensors: it reads `X`, `Y`, and `RZ` from the
+camera and always sends `Z=0.0`, `RX=0.0`, `RY=0.0` to PMTW. This covers the vast
+majority of industrial external-sensor use cases (conveyor tracking, 2D vision
+guidance), but the ABB `PositionGenerator`/PMTW external sensor interface itself
+supports full 3D poses (`X`, `Y`, `Z`, `RX`, `RY`, `RZ`).
+
+If a future integration needs true 3D positions (for example a 3D vision sensor
+reporting height and out-of-plane tilt), a developer extending this project would
+need to:
+
+- Extend the text protocol to carry `Z`, `RX`, and `RY` per object block (for
+  example `X,Y,Z,RX,RY,RZ,Tag,Score,Val1,...,Level`), updating `posFieldNames`,
+  `posFieldCount`, and the parsing/validation logic in
+  [SensorFunctions.py](/scripts/SensorFunctions.py).
+- Update `isEmptyPosition` to consider the additional axes when deciding whether
+  an object slot is empty.
+- Forward the parsed `Z`, `RX`, `RY` values instead of hardcoded `0.0` in
+  `sendNewPositions`.
+- Update this document (field tables and example payloads), the mocks under
+  [tests/mocks/mock_external_sensor.py](/tests/mocks/mock_external_sensor.py),
+  and the integration tests to match the new field layout.

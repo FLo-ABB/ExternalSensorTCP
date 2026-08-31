@@ -18,6 +18,12 @@ A lightweight Python integration for the PickMaster Twin/Lite External Sensor in
 - Single-sensor runtime model aligned with the ABB interface contract
 - Release package includes the MIT license and a link to this repository for source code and documentation
 
+> **Known limitation:** Only 2D sensors are supported (`X`, `Y`, `RZ`). `Z`, `RX`,
+> and `RY` are always sent to PMTW as `0.0`, even though the underlying PMTW
+> external sensor interface supports full 3D poses. See
+> [Known limitation: 2D-only positions](documentation/protocol.md#known-limitation-2d-only-positions)
+> for details and guidance if you need to add 3D support.
+
 ## Quick start
 
 1. Copy `scripts\ExternalSensorTCP.py`, `scripts\ExternalSensorInterface.py`, `scripts\SensorFunctions.py`, `scripts\SensorLogger.py`, and `scripts\SensorUI.py` into the PickMaster scripts folder `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`.
