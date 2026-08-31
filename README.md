@@ -4,7 +4,6 @@ A lightweight Python integration for the PickMaster Twin/Lite External Sensor in
 
 **Author:** F. LOBERT, ABB  
 **Status:** Working  
-**Version:** 1.1
 **License:** MIT
 
 > This project is provided as-is with no formal support. Issues and pull requests are welcome for bug fixes and improvements.
