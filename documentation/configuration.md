@@ -11,9 +11,8 @@ Opened by PMTW when the user clicks **Configure** on the External Sensor item.
 | Test button     | Opens a 1.5 s test connection; **OK is disabled until test passes**  |
 | Enable logging  | Checkbox to activate file logging; unchecked by default              |
 | Log folder      | Destination folder (created automatically if missing)               |
-| File name       | Log filename; default: `ExternalSensor.log`                          |
 
-The sensor config persists in the base class dictionary. The logger config persists in `C:\PMScriptsConfig\ExternalSensorTCP.config.json` and is reloaded by sensor ID.
+The sensor config persists in the base class dictionary. The logger config persists beside the deployed scripts in `%PROGRAMDATA%\ABB\PickMaster\PMScripts\ExternalSensorTCP.config.json` and is reloaded by sensor ID.
 
 ## Sensor configuration
 
@@ -23,15 +22,14 @@ The sensor configuration dialog is used to set:
 - TCP server port
 - log enable state
 - log folder
-- log file name
 
 ### Default values
 
 - IP: `192.168.0.9`
 - Port: `8500`
 - Log enabled: `False`
-- Log folder: `C:\PMScriptsLog`
-- File name: `ExternalSensor.log`
+- Log folder: `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`
+- Log file name: fixed to `ExternalSensor.log`
 
 ### Config string format
 
@@ -50,13 +48,13 @@ Example:
 The logger config string is stored as:
 
 ```text
-"enabled|folder|filename"
+"enabled|folder"
 ```
 
 Example:
 
 ```text
-"0|C:\PMScriptsLog|ExternalSensor.log"
+"0|%PROGRAMDATA%\ABB\PickMaster\PMScripts\"
 ```
 
 ## Position generator configuration dialog
@@ -88,5 +86,5 @@ During startup, the runtime loads the saved logger configuration for the current
 The logger settings are persisted in:
 
 ```text
-C:\PMScriptsConfig\ExternalSensorTCP.config.json
+%PROGRAMDATA%\ABB\PickMaster\PMScripts\ExternalSensorTCP.config.json
 ```

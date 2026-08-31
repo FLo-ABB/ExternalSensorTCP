@@ -22,6 +22,8 @@ pytest
 
 - `conftest.py` — adds `scripts/` to `sys.path` so tests can `import SensorFunctions` etc.
 - `mocks/` — the two mocks described above.
+- `test_sensor_logger.py` — tests logger configuration, disabled logging, directory
+  creation, line formatting, singleton worker startup, and bounded rotation.
 - `test_sensor_functions_integration.py` — end-to-end tests that start
   `SensorFunctions.startSensor` against the mock sensor server and mock PickMaster,
   covering valid data, zero-object acquisitions, incorrect/malformed data, out-of-order

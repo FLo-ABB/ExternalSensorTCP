@@ -30,8 +30,7 @@ class ExternalSensorTCP(SensorRuntime, PositionGenerator, SensorConfig, SensorIn
     allThreads = []
     allSensors = []
     loggerConfigDict: dict = {}
-    configFilePath = r"C:\PMScriptsConfig\ExternalSensorTCP.config.json"
-    legacyConfigFilePath = r"C:\PMScriptsLog\ExternalSensorTCP.config.json"
+    configFilePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ExternalSensorTCP.config.json")
 
     def _get_logger(self) -> SensorLogger.SensorLogger:
         # Returns a logger from the first available sensor config; no-op logger if none configured yet.
@@ -45,21 +44,10 @@ class ExternalSensorTCP(SensorRuntime, PositionGenerator, SensorConfig, SensorIn
         return str(value).strip().strip("{}").lower()
 
     def _read_config_file(self) -> dict:
-        config = {}
         try:
             with open(self.configFilePath, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 if isinstance(config, dict):
-                    return config
-        except Exception:
-            pass
-
-        # Backward compatibility: if config used to live in log folder, read and migrate it.
-        try:
-            with open(self.legacyConfigFilePath, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                if isinstance(config, dict):
-                    self._write_config_file(config)
                     return config
         except Exception:
             pass

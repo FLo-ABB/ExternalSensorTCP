@@ -43,7 +43,7 @@ See [Architecture](architecture.md) for full details.
 ## Default behavior
 
 - Logging is disabled by default.
-- The default file name is `ExternalSensor.log`.
+- The log file name is fixed to `ExternalSensor.log`.
 - The logger rotates at 50 MB.
 - Only the 5 most recent rotated files are retained.
 - A warning is emitted once when the file is rotated.

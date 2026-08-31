@@ -36,11 +36,11 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
 
     scale_factor = _get_scale_factor()
     scaled_x = int(scale_factor * 470)
-    scaled_y = int(scale_factor * 370)
+    scaled_y = int(scale_factor * 320)
     ww = sensor_config_window.winfo_screenwidth()
     wh = sensor_config_window.winfo_screenheight()
     pos_x = int(ww / 2 - 470 * scale_factor / 2)
-    pos_y = int(wh / 2 - 370 * scale_factor / 2)
+    pos_y = int(wh / 2 - 320 * scale_factor / 2)
     sensor_config_window.geometry(
         str(scaled_x) + "x" + str(scaled_y) + "+" + str(pos_x) + "+" + str(pos_y)
     )
@@ -124,7 +124,7 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
     txt_port.insert(0, str(default_port))
 
     logger_config_out = ""
-    log_enabled, log_folder, log_filename = SensorLogger.deserialize_config(logger_config_str)
+    log_enabled, log_folder, _ = SensorLogger.deserialize_config(logger_config_str)
     var_log_enabled = tk.BooleanVar(value=log_enabled)
 
     frame_logger = tk.Frame(sensor_config_window, bg="#ffffff")
@@ -171,22 +171,9 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
     )
     btn_log_browse.pack(side="left", padx=(6, 0))
 
-    frame_log_file = tk.Frame(frame_logger, bg="#ffffff")
-    frame_log_file.pack(side="top", fill="x", pady=(0, 4))
-    tk.Label(
-        frame_log_file, text="File name:", font=("ABBvoice", 9), bg="#ffffff", width=11, anchor="w"
-    ).pack(side="left")
-    frame_log_file_entry = tk.Frame(
-        frame_log_file, highlightbackground="#bababa", highlightcolor="#bababa", borderwidth=2
-    )
-    frame_log_file_entry.pack(side="left", expand=True, fill="both")
-    txt_log_file = tk.Entry(frame_log_file_entry, font=("ABBvoice", 9), relief="solid", borderwidth=0)
-    txt_log_file.pack(expand=True, fill="both")
-    txt_log_file.insert(0, log_filename)
-
     tk.Label(
         frame_logger,
-        text="Default: {}".format(SensorLogger._default_filename()),
+        text="Log file name: {}".format(SensorLogger._default_filename()),
         font=("ABBvoice", 9),
         fg="#bababa",
         bg="#ffffff",
@@ -210,7 +197,6 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
     def _toggle_log_fields() -> None:
         state = "normal" if var_log_enabled.get() else "disabled"
         txt_log_folder.config(state=state)
-        txt_log_file.config(state=state)
         btn_log_browse.config(state=state)
 
     def _browse_log_folder() -> None:
@@ -244,9 +230,7 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
             return
 
         server_config = "{};{}".format(ip_address, server_port)
-        logger_config_out = SensorLogger.serialize_config(
-            var_log_enabled.get(), txt_log_folder.get().strip(), txt_log_file.get().strip()
-        )
+        logger_config_out = SensorLogger.serialize_config(var_log_enabled.get(), txt_log_folder.get().strip())
         is_config_valid = True
         sensor_config_window.destroy()
 

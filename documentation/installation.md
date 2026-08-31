@@ -33,6 +33,6 @@ After deployment, confirm that the module loads correctly in the configured PM r
 ## Important notes
 
 - The logger is off by default.
-- The default log folder is `C:\PMScriptsLog`.
-- The default log file is `ExternalSensor.log`.
+- The default log folder is `%PROGRAMDATA%\ABB\PickMaster\PMScripts\`, beside the deployed scripts.
+- The log file is always `ExternalSensor.log`.
 - If the log folder is not writable, the logger prints a warning to `stderr` but the runtime continues.
