@@ -1,16 +1,7 @@
 """Tests for SensorLogger, covering the 50 MB size limit and the
 circular rotation that keeps only the most recent rotated files."""
 
-# Coverage:
-# - Config serialization round-trips correctly.
-# - Writing while disabled produces no file and no queued work.
-# - Writing while enabled creates the log file with the expected line.
-# - A log file at/over the size limit is rotated (renamed with a
-#   timestamp suffix) before the next write, and a new file is started.
-# - Rotation is circular: once more than MAX_ROTATED_LOG_FILES rotated
-#   files exist, the oldest ones are pruned, keeping only the newest ones.
-# - _rotate_log_file() is a no-op when the target file does not exist.
-
+import datetime
 import glob
 import os
 import queue
@@ -32,8 +23,8 @@ def reset_logger_class_state():
     SensorLogger._worker_started = False
 
 
-def _make_logger(tmp_path, filename="ExternalSensor.log", enabled=True):
-    config_str = serialize_config(enabled, str(tmp_path), filename)
+def _make_logger(tmp_path, enabled=True):
+    config_str = serialize_config(enabled, str(tmp_path))
     return SensorLogger(config_str)
 
 
@@ -46,10 +37,10 @@ def _wait_for_queue_drain(timeout=5.0):
     SensorLogger._write_queue.join()
 
 
-# Verifies that serializing a config and deserializing it back returns the
-# same enabled flag, folder, and filename that were passed in.
+# Verifies that the fixed log filename is restored from the compact config.
+# Expected result: the enabled flag and folder round-trip, and the filename is fixed.
 def test_config_round_trip(tmp_path):
-    config_str = serialize_config(True, str(tmp_path), "ExternalSensor.log")
+    config_str = serialize_config(True, str(tmp_path))
     enabled, folder, filename = deserialize_config(config_str)
     assert enabled is True
     assert folder == str(tmp_path)
@@ -57,7 +48,7 @@ def test_config_round_trip(tmp_path):
 
 
 # Verifies that log() is a no-op when logging is disabled: nothing is
-# queued and no log file is created.
+# Expected result: no work is queued and no log file is created.
 def test_log_does_nothing_when_disabled(tmp_path):
     logger = _make_logger(tmp_path, enabled=False)
 
@@ -70,6 +61,7 @@ def test_log_does_nothing_when_disabled(tmp_path):
 
 # Verifies that log() writes a single line with the timestamp, [SUCCESS]
 # mark, context, and message when logging is enabled.
+# Expected result: the created log contains one newline-terminated success entry.
 def test_log_writes_expected_line_when_enabled(tmp_path):
     logger = _make_logger(tmp_path)
 
@@ -85,7 +77,46 @@ def test_log_writes_expected_line_when_enabled(tmp_path):
     assert content.endswith("\n")
 
 
-# Verifies that log() marks the line as [ERROR] when success is False.
+# Verifies that an enabled logger can write to a configured directory that does not exist.
+# Expected result: the directory and the fixed-name log file are created.
+def test_log_creates_configured_folder(tmp_path):
+    log_folder = tmp_path / "commissioning" / "logs"
+    logger = _make_logger(log_folder)
+
+    logger.log("MyContext", "directory created", success=True)
+    _wait_for_queue_drain()
+
+    assert log_folder.is_dir()
+    assert os.path.exists(logger.log_path)
+
+
+# Verifies that repeated worker startup requests do not create duplicate writers.
+# Expected result: exactly one daemon worker with the expected target and name is started.
+def test_start_worker_creates_only_one_process_lifetime_writer(monkeypatch):
+    started_threads = []
+
+    class FakeThread:
+        def __init__(self, target, name, daemon):
+            self.target = target
+            self.name = name
+            self.daemon = daemon
+
+        def start(self):
+            started_threads.append(self)
+
+    monkeypatch.setattr("SensorLogger.threading.Thread", FakeThread)
+
+    SensorLogger._start_worker()
+    SensorLogger._start_worker()
+
+    assert len(started_threads) == 1
+    assert started_threads[0].target == SensorLogger._write_worker
+    assert started_threads[0].name == "SensorLogger"
+    assert started_threads[0].daemon is True
+
+
+# Verifies that log() marks an unsuccessful entry as an error.
+# Expected result: the created log contains the error mark, context, and message.
 def test_log_writes_error_mark_when_not_success(tmp_path):
     logger = _make_logger(tmp_path)
 
@@ -101,6 +132,7 @@ def test_log_writes_error_mark_when_not_success(tmp_path):
 
 # Verifies that successive log() calls append new lines to the same file
 # instead of overwriting previous entries.
+# Expected result: both entries occur in their original order.
 def test_log_appends_multiple_lines(tmp_path):
     logger = _make_logger(tmp_path)
 
@@ -117,7 +149,8 @@ def test_log_appends_multiple_lines(tmp_path):
 
 
 # Verifies that _rotate_log_file() does nothing when there is no current
-# log file to rotate (no rename, no rotated file created).
+# log file to rotate.
+# Expected result: no active or rotated log file is created.
 def test_rotate_log_file_is_noop_when_file_missing(tmp_path):
     log_path = os.path.join(str(tmp_path), "ExternalSensor.log")
 
@@ -129,6 +162,7 @@ def test_rotate_log_file_is_noop_when_file_missing(tmp_path):
 
 # Verifies that _rotate_log_file() renames the current log file to a
 # timestamped filename and preserves its content.
+# Expected result: the active file is absent and one rotated file contains the original content.
 def test_rotate_log_file_renames_current_log_with_timestamp(tmp_path):
     log_path = os.path.join(str(tmp_path), "ExternalSensor.log")
     with open(log_path, "w", encoding="utf-8") as log_file:
@@ -146,22 +180,22 @@ def test_rotate_log_file_renames_current_log_with_timestamp(tmp_path):
 # Verifies the circular rotation behavior: once more rotated files exist
 # than MAX_ROTATED_LOG_FILES allows, the oldest ones are pruned so only
 # the newest ones remain.
+# Expected result: the three oldest files are removed and the five newest remain.
 def test_rotate_log_file_keeps_only_the_5_newest_rotated_files(tmp_path):
     log_path = os.path.join(str(tmp_path), "ExternalSensor.log")
     base_name, extension = os.path.splitext(log_path)
 
-    # Pre-create more rotated files than the cap allows, with distinct
-    # mtimes so the oldest ones are unambiguous.
+    # Distinct mtimes make the retention order unambiguous.
     extra_rotated_files = []
     for i in range(7):
-        rotated_path = "{}_existing{}{}".format(base_name, i, extension)
+        timestamp = datetime.datetime(2026, 1, 1) + datetime.timedelta(seconds=i)
+        rotated_path = "{}_{}{}".format(base_name, timestamp.strftime("%Y%m%d_%H%M%S_%f"), extension)
         with open(rotated_path, "w", encoding="utf-8") as rotated_file:
             rotated_file.write("rotated {}\n".format(i))
         mtime = time.time() - (100 - i)
         os.utime(rotated_path, (mtime, mtime))
         extra_rotated_files.append(rotated_path)
 
-    # Trigger one more rotation of the "current" log file.
     with open(log_path, "w", encoding="utf-8") as log_file:
         log_file.write("current\n")
     SensorLogger._rotate_log_file(log_path)
@@ -169,18 +203,34 @@ def test_rotate_log_file_keeps_only_the_5_newest_rotated_files(tmp_path):
     rotated_files = glob.glob("{}_*{}".format(base_name, extension))
     assert len(rotated_files) == SensorLogger.MAX_ROTATED_LOG_FILES
 
-    # 7 pre-existing + 1 newly rotated = 8 files; only the 5 newest survive,
-    # i.e. the 3 oldest pre-existing files must have been pruned.
     for removed_file in extra_rotated_files[:3]:
         assert removed_file not in rotated_files
     for surviving_file in extra_rotated_files[3:]:
         assert surviving_file in rotated_files
 
 
+# Verifies that retention ignores a similarly named log file not created by this logger.
+# Expected result: rotation leaves the unrelated file and its content untouched.
+def test_rotate_log_file_preserves_non_logger_log_files(tmp_path):
+    log_path = os.path.join(str(tmp_path), "ExternalSensor.log")
+    unrelated_file = os.path.join(str(tmp_path), "ExternalSensor_notes.log")
+    with open(log_path, "w", encoding="utf-8") as log_file:
+        log_file.write("current\n")
+    with open(unrelated_file, "w", encoding="utf-8") as log_file:
+        log_file.write("do not remove\n")
+
+    SensorLogger._rotate_log_file(log_path)
+
+    assert os.path.exists(unrelated_file)
+    with open(unrelated_file, "r", encoding="utf-8") as log_file:
+        assert log_file.read() == "do not remove\n"
+
+
 # Verifies the end-to-end size-limit rotation: writing through log()
 # rotates the file once it is at or above the configured size limit,
 # without needing an actual 50 MB file (the limit is monkeypatched down
 # for a fast, deterministic test).
+# Expected result: the original entry moves to one rotated file and the next entry starts a new log.
 def test_write_worker_rotates_log_when_size_limit_reached(tmp_path, monkeypatch):
     monkeypatch.setattr(SensorLogger, "MAX_LOG_FILE_SIZE_BYTES", 10)
 
@@ -188,15 +238,12 @@ def test_write_worker_rotates_log_when_size_limit_reached(tmp_path, monkeypatch)
     log_path = logger.log_path
     base_name, extension = os.path.splitext(log_path)
 
-    # First write: file doesn't exist yet, so no rotation should happen.
     logger.log("ctx", "a" * 20, success=True)
     _wait_for_queue_drain()
     assert os.path.exists(log_path)
     assert glob.glob("{}_*{}".format(base_name, extension)) == []
     assert os.path.getsize(log_path) >= SensorLogger.MAX_LOG_FILE_SIZE_BYTES
 
-    # Second write: existing file is already >= the (patched) limit, so it
-    # must be rotated before the new line is written to a fresh file.
     logger.log("ctx", "b", success=True)
     _wait_for_queue_drain()
 

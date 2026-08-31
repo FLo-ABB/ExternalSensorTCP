@@ -3,6 +3,7 @@ import ctypes.wintypes
 import datetime
 import glob
 import os
+import re
 import sys
 import tkinter as tk
 import queue
@@ -36,26 +37,26 @@ def _default_filename() -> str:
 
 
 def _default_folder() -> str:
-    return r"C:\PMScriptsLog"
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 def _default_enabled() -> bool:
     return False
 
 
-# Config string format: "enabled|folder|filename"
+# Config string format: "enabled|folder"
 # | is not a valid Windows path character, so it is safe as a separator.
 
-def serialize_config(enabled: bool, folder: str, filename: str) -> str:
-    return "{}|{}|{}".format("1" if enabled else "0", folder, filename)
+def serialize_config(enabled: bool, folder: str) -> str:
+    return "{}|{}".format("1" if enabled else "0", folder)
 
 
 def deserialize_config(config_str: str) -> tuple:
     """Returns (enabled: bool, folder: str, filename: str)."""
     if config_str and "|" in config_str:
-        parts = config_str.split("|", 2)
-        if len(parts) == 3:
-            return parts[0] == "1", parts[1], parts[2]
+        parts = config_str.split("|")
+        if len(parts) == 2:
+            return parts[0] == "1", parts[1], _default_filename()
     return _default_enabled(), _default_folder(), _default_filename()
 
 
@@ -88,16 +89,30 @@ class SensorLogger:
         )
         os.replace(log_path, rotated_name)
 
-        rotated_files = sorted(
-            glob.glob("{}_*{}".format(base_name, extension)),
-            key=os.path.getmtime,
-        )
+        rotated_files = cls._get_rotated_log_files(log_path)
         while len(rotated_files) > cls.MAX_ROTATED_LOG_FILES:
             oldest_file = rotated_files.pop(0)
             try:
                 os.remove(oldest_file)
             except OSError:
                 pass
+
+    @staticmethod
+    def _get_rotated_log_files(log_path: str) -> list[str]:
+        base_name, extension = os.path.splitext(log_path)
+        timestamp_pattern = re.compile(
+            r"^{}_\d{{8}}_\d{{6}}_\d{{6}}{}$".format(
+                re.escape(base_name), re.escape(extension)
+            )
+        )
+        return sorted(
+            (
+                file_path
+                for file_path in glob.glob("{}_*{}".format(base_name, extension))
+                if timestamp_pattern.match(file_path)
+            ),
+            key=os.path.getmtime,
+        )
 
     @classmethod
     def _start_worker(cls) -> None:
@@ -138,7 +153,7 @@ def show_logger_config_dialog(input_title: str, config_str: str) -> tuple:
     Returns (is_valid: bool, new_config_str: str).
     is_valid is False when the user cancelled without saving.
     """
-    enabled, folder, filename = deserialize_config(config_str)
+    enabled, folder, _ = deserialize_config(config_str)
 
     window = tk.Tk()
     window.title(input_title)
@@ -149,11 +164,11 @@ def show_logger_config_dialog(input_title: str, config_str: str) -> tuple:
 
     scale_factor = _get_scale_factor()
     scaled_x = int(scale_factor * 500)
-    scaled_y = int(scale_factor * 230)
+    scaled_y = int(scale_factor * 180)
     ww = window.winfo_screenwidth()
     wh = window.winfo_screenheight()
     pos_x = int(ww / 2 - 500 * scale_factor / 2)
-    pos_y = int(wh / 2 - 230 * scale_factor / 2)
+    pos_y = int(wh / 2 - 180 * scale_factor / 2)
     window.geometry("{}x{}+{}+{}".format(scaled_x, scaled_y, pos_x, pos_y))
 
     result_config: list[str] = [""]
@@ -204,24 +219,9 @@ def show_logger_config_dialog(input_title: str, config_str: str) -> tuple:
     )
     btn_browse.pack(side="left", padx=(6, 0))
 
-    # --- Filename row ---
-    frame_file = tk.Frame(frame_main, bg="#ffffff")
-    frame_file.pack(side="top", fill="x", pady=(0, 4))
-    tk.Label(
-        frame_file, text="File name:", font=("ABBvoice", 9), bg="#ffffff", width=11, anchor="w"
-    ).pack(side="left")
-    frame_file_entry = tk.Frame(
-        frame_file, highlightbackground="#bababa", highlightcolor="#bababa", borderwidth=2
-    )
-    frame_file_entry.pack(side="left", expand=True, fill="both")
-    txt_file = tk.Entry(frame_file_entry, font=("ABBvoice", 9), relief="solid", borderwidth=0)
-    txt_file.pack(expand=True, fill="both")
-    txt_file.insert(0, filename)
-
-    # --- Info label ---
     tk.Label(
         frame_main,
-        text="Default file name: {}".format(_default_filename()),
+        text="Log file name: {}".format(_default_filename()),
         font=("ABBvoice", 9),
         fg="#bababa",
         bg="#ffffff",
@@ -237,7 +237,6 @@ def show_logger_config_dialog(input_title: str, config_str: str) -> tuple:
     def _toggle_fields() -> None:
         state = "normal" if var_enabled.get() else "disabled"
         txt_folder.config(state=state)
-        txt_file.config(state=state)
         btn_browse.config(state=state)
 
     def _browse_folder() -> None:
@@ -249,15 +248,11 @@ def show_logger_config_dialog(input_title: str, config_str: str) -> tuple:
 
     def _close_window() -> None:
         folder_val = txt_folder.get().strip()
-        file_val = txt_file.get().strip()
         if var_enabled.get():
             if not folder_val:
                 lb_error.config(text="Please select a log folder.", fg="red")
                 return
-            if not file_val:
-                lb_error.config(text="Please enter a file name.", fg="red")
-                return
-        result_config[0] = serialize_config(var_enabled.get(), folder_val, file_val)
+        result_config[0] = serialize_config(var_enabled.get(), folder_val)
         is_valid[0] = True
         window.destroy()
 

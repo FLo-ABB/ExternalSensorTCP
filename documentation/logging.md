@@ -2,7 +2,7 @@
 
 ## Default behavior
 
-Logging is unchecked by default to avoid unnecessary disk usage. The default file name is:
+Logging is unchecked by default to avoid unnecessary disk usage. The log file name is fixed to:
 
 ```text
 ExternalSensor.log
@@ -11,8 +11,14 @@ ExternalSensor.log
 The default log folder is:
 
 ```text
-C:\PMScriptsLog
+%PROGRAMDATA%\ABB\PickMaster\PMScripts\
 ```
+
+When enabled, the logger keeps one background writer alive for the PickMaster
+process lifetime. This is intentional: logging is used during continuous
+commissioning in the integrator workshop.
+
+The fixed name ensures rotation only manages files created by this logger.
 
 ## Rotation policy
 

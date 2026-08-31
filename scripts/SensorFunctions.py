@@ -20,8 +20,6 @@ class PortOccupiedError(Exception):
 
 
 class SensorFunctions:
-    # This path need to be created by users to store the SensorLog. The SensorLog includes the received item positions.
-    logPath = r"C:\PMScriptsLog\SensorLog.txt"
     isRunning = True
     sensorName = ""
     server: socket.socket | None = None
@@ -32,7 +30,6 @@ class SensorFunctions:
         logCallback.ShowPythonLog(log)
 
     def parseSensorConfig(self, configInfo: str):
-        # Keep backward compatibility with existing port-only configuration.
         defaultAddress = TCPServerAddress
         defaultPort = "8500"
 
@@ -50,9 +47,6 @@ class SensorFunctions:
             if ipAddress and port.isdigit() and 0 <= int(port) <= 65535:
                 return ipAddress, int(port)
             return defaultAddress, int(defaultPort)
-
-        if sensorConfig.isdigit() and 0 <= int(sensorConfig) <= 65535:
-            return defaultAddress, int(sensorConfig)
 
         return defaultAddress, int(defaultPort)
 
@@ -83,22 +77,6 @@ class SensorFunctions:
         recvBuffer = ""
         acqStrobeDict = OrderedDict()
         maxLimitAcq = 100
-
-        def recordPositions(objects):
-            with open(self.logPath, "a") as f:
-                pattern = "Score|Time|SensorId"
-                for key in objects.keys():
-                    if not re.match(pattern, key):
-                        f.write(
-                            str(objects[key]["X"])
-                            + ", "
-                            + str(objects[key]["Y"])
-                            + ", "
-                            + str(objects[key]["Z"])
-                            + ", "
-                            + str(objects[key]["RZ"])
-                            + "\n"
-                        )
 
         def dictLimitCheck(orderedDict, maxLimit: int):
             if len(orderedDict) >= maxLimit:
