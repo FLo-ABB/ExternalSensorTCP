@@ -25,7 +25,7 @@ class ExternalSensorTCP(SensorRuntime, PositionGenerator, SensorConfig, SensorIn
     )
 
     author = "F. LOBERT, ABB"
-    version = "1.1"
+    version = "1.2"
 
     allThreads = []
     allSensors = []
