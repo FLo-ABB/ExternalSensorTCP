@@ -2,10 +2,10 @@
 
 import ctypes
 import os
-import re
 import socket
 import tkinter as tk
 from tkinter import filedialog
+import SensorInputValidator
 import SensorLogger
 
 
@@ -180,18 +180,6 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
         justify="left",
     ).pack(side="top", anchor="w")
 
-    def ip_checker(ip_address: str):
-        pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
-        if not re.match(pattern, ip_address):
-            return False
-        for part in ip_address.split("."):
-            if int(part) < 0 or int(part) > 255:
-                return False
-        return True
-
-    def port_checker(port: str):
-        return re.match(r"^\d+$", port) and int(port) >= 0 and int(port) <= 65535
-
     connection_test_passed = False
 
     def _toggle_log_fields() -> None:
@@ -217,7 +205,7 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
         ip_address = txt_ip.get().strip()
         server_port = txt_port.get().strip()
 
-        if not ip_checker(ip_address) or not port_checker(server_port):
+        if not SensorInputValidator.is_valid_sensor_endpoint(ip_address, server_port):
             lb_wrong_input.config(fg="red")
             lb_connection_status.config(text="Invalid IP address or port.", fg="red")
             return
@@ -239,7 +227,7 @@ def show_sensor_config_dialog(input_title: str, default_address: str, default_po
         ip_address = txt_ip.get().strip()
         server_port = txt_port.get().strip()
 
-        if not ip_checker(ip_address) or not port_checker(server_port):
+        if not SensorInputValidator.is_valid_sensor_endpoint(ip_address, server_port):
             connection_test_passed = False
             btn_ok.config(state="disabled")
             lb_wrong_input.config(fg="red")
@@ -381,7 +369,7 @@ def show_position_generator_config_dialog(input_title: str, config_info: str):
     frame_blk2.pack(side="left", anchor="w", fill="y")
     lb_wrong_input = tk.Label(
         frame_blk1,
-        text="The entered index is invalid, please check your input.",
+        text=SensorInputValidator.INVALID_POSITION_GENERATOR_INDEX_MESSAGE,
         wraplength=int(260 * scale_factor),
         font=("ABBvoice", 9),
         justify="left",
@@ -393,22 +381,10 @@ def show_position_generator_config_dialog(input_title: str, config_info: str):
     position_generator_index_num.insert(0, config_info)
 
     def input_checker(input_value: str):
-        pattern = "^(\\d+;)+(?=\\d+$)|^\\d+$"
-        if re.match(pattern, input_value):
-            position_generator_index_list = re.findall("\\d+", input_value)
-            position_generator_index_set = set(position_generator_index_list)
-            for index in position_generator_index_set:
-                if position_generator_index_list.count(index) > 1:
-                    lb_wrong_input.config(text="Duplicated index detected, please check your input.")
-                    return False
-            for index in position_generator_index_list:
-                if int(index) < 0 or int(index) > 1000:
-                    lb_wrong_input.config(text="The entered index is invalid, please check your input.")
-                    return False
-        else:
-            lb_wrong_input.config(text="The entered index is invalid, please check your input.")
-            return False
-        return True
+        is_valid, message = SensorInputValidator.validate_position_generator_indexes(input_value)
+        if not is_valid:
+            lb_wrong_input.config(text=message)
+        return is_valid
 
     def close_window():
         nonlocal position_generator_index, is_index_valid
