@@ -79,6 +79,27 @@ or multiple entries separated with `;`:
 "0;1;2"
 ```
 
+## Position generator and item matching
+
+The position generator index is not just a technical detail. It is the link between the external sensor and the PMTW item-source configuration. In practice, the sensor developer and the PickMaster configuration engineer must agree on which generator index corresponds to which object class or item type.
+
+For example, if PMTW is configured so that:
+
+- position generator index `0` = square item
+- position generator index `1` = circle item
+
+then the external sensor must detect the object and send it with the matching `PosGenId` value. A square detection must be sent with `PosGenId = 0`, and a circle detection must be sent with `PosGenId = 1`.
+
+This is a shared contract between the sensor and PMTW:
+
+- the sensor performs the classification or object selection logic
+- PMTW defines the item-source mapping through the generator index
+- the sensor sends the matching index in the object payload so PMTW can associate the result with the correct item definition
+
+The same pattern applies to any object classes, not only square vs. circle. The index is the selector that tells PMTW which item source or item definition the result belongs to.
+
+The implementation enforces this by including `PosGenId` in each object sent through `NewPosition()`. The value comes from the configured position-generator index, while the sensor-side logic decides which index should be assigned for each detected object.
+
 ## Runtime behavior
 
 During startup, the runtime loads the saved logger configuration for the current sensor ID and reuses it when the configuration dialog is reopened.
