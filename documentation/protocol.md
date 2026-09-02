@@ -100,16 +100,19 @@ Example payload sent by the camera (one acquisition, two objects):
 
 ### PosGenId and item matching
 
-`PosGenId` is the field that associates a detection with the correct PMTW item source or item definition. It is not only a debugging or bookkeeping parameter; it is the identifier that tells PMTW which configured generator index the object belongs to.
+`PosGenId` associates a detection with a PMTW item source or item definition. However, in this implementation `PosGenId` is **not** part of the TCP text protocol and cannot be chosen per detected object by the sensor-side algorithm.
 
-This means that the external sensor developer and the PickMaster configuration engineer must agree on the mapping. For example, if the PMTW recipe defines:
+`positionGeneratorId` is fixed per runtime thread: it is supplied once by PMTW configuration (via `posGenSensorMapDict`, configured through the [Position generator configuration dialog](configuration.md)) when `SensorFunctions.startSensor()` is started, and every object received on that thread's TCP connection is stamped with that same, unchanging `PosGenId`. There is no field in the TCP message (`X,Y,RZ,Tag,Score,Val1-5,Level`) that lets the sensor select a different `PosGenId` per object.
 
-- `PosGenId = 0` for square items
-- `PosGenId = 1` for circle items
+Practical consequence — if a project needs to distinguish multiple item classes (for example, an illustrative "square" vs. "circle" case):
 
-then the sensor must classify each detection and send the matching value in the object payload. A square should be sent with `PosGenId = 0`, and a circle with `PosGenId = 1`.
+- Each item class needs its **own position generator**, configured in PMTW and mapped to a sensor entry.
+- Each position generator runs on its **own thread and TCP connection** (see `startSensor` in [ExternalSensorTCP.py](/scripts/ExternalSensorTCP.py)), so a single physical sensor sending mixed item classes over one connection cannot be routed to different `PosGenId` values by this implementation as-is.
+- The `Tag` field is forwarded to PMTW as metadata per object, but the current code does not use it to select a `PosGenId`. It is available for the sensor to encode a class/type identifier, but any routing to a specific item source based on `Tag` would require custom logic added to `SensorFunctions.startSensor()`/`sendNewPositions()` — it is not implemented today.
 
-The same rule applies to any number of object classes: the sensor decides which class was detected, and the sensor-side logic must assign the correct generator index before sending the `NewPosition()` result. PMTW then routes that object to the corresponding item source configured for that index.
+The external sensor developer and the PickMaster configuration engineer must still agree on what each configured generator index represents, and on which sensor connection feeds it — but this agreement happens at the position-generator/connection level, not per individual TCP message.
+
+Note that the user-entered position generator index string (`"0"`, `"0;1;2"`, ...) is stored and passed into `SensorFunctions.startSensor()`, but that value is currently a placeholder with no runtime effect — see [Configuration: the configured index string is currently a placeholder](configuration.md#the-configured-index-string-is-currently-a-placeholder) for what it could be used for.
 
 When no part is detected, the position objects are omitted:
 
