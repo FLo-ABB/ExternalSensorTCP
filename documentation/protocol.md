@@ -98,6 +98,19 @@ Example payload sent by the camera (one acquisition, two objects):
 }
 ```
 
+### PosGenId and item matching
+
+`PosGenId` is the field that associates a detection with the correct PMTW item source or item definition. It is not only a debugging or bookkeeping parameter; it is the identifier that tells PMTW which configured generator index the object belongs to.
+
+This means that the external sensor developer and the PickMaster configuration engineer must agree on the mapping. For example, if the PMTW recipe defines:
+
+- `PosGenId = 0` for square items
+- `PosGenId = 1` for circle items
+
+then the sensor must classify each detection and send the matching value in the object payload. A square should be sent with `PosGenId = 0`, and a circle with `PosGenId = 1`.
+
+The same rule applies to any number of object classes: the sensor decides which class was detected, and the sensor-side logic must assign the correct generator index before sending the `NewPosition()` result. PMTW then routes that object to the corresponding item source configured for that index.
+
 When no part is detected, the position objects are omitted:
 
 ```python
